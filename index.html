@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Guessing Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="app-container">
+
+        <!-- TITLE SCREEN -->
+        <div id="title-screen" class="screen active">
+            <!-- Simplified: No Header -->
+            <button id="theme-toggle" class="theme-toggle-btn" title="Switch Theme">🎨</button>
+
+            <div class="hero-section">
+                <h1 class="mega-title">Emoji<span class="highlight">Mind</span></h1>
+                <p class="subtitle">Pee Pee Poo Poo And Fart.</p>
+
+                <div class="mode-selection">
+                    <button id="mode-endless" class="mode-card">
+                        <span class="mode-icon">♾️</span>
+                        <div class="mode-info">
+                            <h3>Endless Mode</h3>
+                            <p>Play at your own pace. No limits.</p>
+                        </div>
+                    </button>
+
+                    <button id="mode-timed" class="mode-card">
+                        <span class="mode-icon">⏱️</span>
+                        <div class="mode-info">
+                            <h3>Time Attack</h3>
+                            <p>Race against the clock! (60s)</p>
+                        </div>
+                    </button>
+
+                    <button id="mode-multiplayer" class="mode-card">
+                        <span class="mode-icon">⚔️</span>
+                        <div class="mode-info">
+                            <h3>Head-to-Head</h3>
+                            <p>Challenge a friend! (P2P)</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Removed Footer for cleaner look -->
+        </div>
+
+        <!-- GAME SCREEN -->
+        <div id="game-screen" class="screen">
+            <header>
+                <div class="header-top">
+                    <button id="back-to-menu-btn" class="action-btn secondary small">⬅ Menu</button>
+                    <div id="opponent-stats" class="opponent-stats hidden">
+                        <span class="status-indicator online"></span>
+                        <span id="opp-score">Opp: 0</span>
+                    </div>
+                    <div id="timer-display" class="timer hidden">60</div>
+                </div>
+                <div class="header-content">
+                    <h2>Emoji<span class="highlight">Mind</span></h2>
+                    <div class="stats-container">
+                        <div class="stat-box">
+                            <span class="stat-label">Score</span>
+                            <span class="stat-value" id="score">0</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Streak</span>
+                            <span class="stat-value" id="streak">0</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main>
+                <div class="game-card">
+                    <div class="emoji-display" id="emoji-display">
+                        <span class="loading-emoji">🤔</span>
+                    </div>
+
+                    <div class="hint-area" id="hint-area">
+                        <!-- Hints appear here -->
+                    </div>
+
+                    <div class="input-area">
+                        <input type="text" id="guess-input" placeholder="Type your guess..." autocomplete="off">
+                        <button id="submit-btn" class="action-btn primary">Guess</button>
+                    </div>
+
+                    <div class="controls-area">
+                        <button id="hint-btn" class="action-btn secondary">💡 Hint</button>
+                        <button id="reveal-btn" class="action-btn secondary">👁️ Reveal</button>
+                        <button id="skip-btn" class="action-btn secondary">Skip ⏩</button>
+                    </div>
+
+                    <div class="feedback-message" id="feedback"></div>
+                </div>
+            </main>
+        </div>
+
+        <!-- CATEGORY MODAL -->
+        <div id="category-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h2>Select Categories</h2>
+                <p>Choose at least one to start</p>
+
+                <div class="category-grid" id="modal-category-container">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div class="modal-actions">
+                    <button id="cancel-modal-btn" class="action-btn secondary">Cancel</button>
+                    <button id="start-game-btn" class="action-btn primary large">Start Game 🚀</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MULTIPLAYER LOBBY MODAL -->
+        <div id="lobby-modal" class="modal-overlay">
+            <div class="modal-content lobby-content">
+                <h2>Head-to-Head ⚔️</h2>
+
+                <div class="lobby-tabs">
+                    <button class="tab-btn active" data-tab="create">Create Game</button>
+                    <button class="tab-btn" data-tab="join">Join Game</button>
+                </div>
+
+                <div class="tab-content active" id="tab-create">
+                    <div class="lobby-settings">
+                        <div class="setting-row">
+                            <label>Duration:</label>
+                            <select id="lobby-duration">
+                                <option value="60">60s</option>
+                                <option value="120">120s (2m)</option>
+                                <option value="180">180s (3m)</option>
+                            </select>
+                        </div>
+                        <p class="small-hint">Categories: Using your current selection</p>
+                    </div>
+
+                    <p>Share this ID with your friend:</p>
+                    <div class="id-display-box">
+                        <code id="my-peer-id">Generating ID...</code>
+                        <button id="copy-id-btn" class="icon-btn" title="Copy">📋</button>
+                    </div>
+                    <div class="lobby-status">
+                        <div class="spinner"></div>
+                        <p>Waiting for opponent...</p>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="tab-join">
+                    <p>Enter your friend's Game ID:</p>
+                    <div class="input-group">
+                        <input type="text" id="host-id-input" placeholder="e.g. funny-tiger-99">
+                        <button id="connect-btn" class="action-btn primary">Connect</button>
+                    </div>
+                    <p id="join-status-msg" class="status-msg"></p>
+                </div>
+
+                <div class="modal-actions">
+                    <button id="cancel-lobby-btn" class="action-btn secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- GAME OVER MODAL -->
+        <div id="game-over-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h2>Game Over! ⏱️</h2>
+                <p class="final-score">Score: <span id="final-score-val">0</span></p>
+
+                <div class="leaderboard-section">
+                    <h3>High Scores</h3>
+                    <div class="leaderboard-table" id="leaderboard-table">
+                        <!-- JS populated -->
+                    </div>
+                </div>
+
+                <div class="input-name-area">
+                    <input type="text" id="player-name" placeholder="Enter Name" maxlength="10">
+                    <button id="save-score-btn" class="action-btn primary">Save</button>
+                </div>
+
+                <div class="modal-actions">
+                    <button id="play-again-btn" class="action-btn secondary">Main Menu</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="data.js"></script>
+    <script src="multiplayer.js"></script>
+    <script src="game.js"></script>
+</body>
+
+</html>
